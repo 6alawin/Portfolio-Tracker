@@ -99,7 +99,7 @@ def calculate_port(transactions):
     return total_sell_revenue, total_invested, realized_pnl
 
 # --- S&P 500 Cache (24 ชั่วโมง) ---
-@st.cache_data(ttl=86400) 
+@st.cache_data(ttl=3000) 
 def fetch_sp500_data(start_date):
     try:
         return yf.download("^GSPC", start=start_date, progress=False)['Close']
