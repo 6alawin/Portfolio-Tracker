@@ -232,21 +232,16 @@ def main_page():
 
     col_main, col_side = st.columns([2, 1])
 
-<<<<<<< Updated upstream
-=======
     # --- History ---
->>>>>>> Stashed changes
     with col_main:
         st.subheader("📦 Current Holdings")
         st.dataframe(table, use_container_width=True)
 
-<<<<<<< Updated upstream
         st.subheader("📜 Trade History")
         st.dataframe(transactions, use_container_width=True)
 
     with col_side:
         st.subheader("💸 Withdrawal Log")
-=======
         action_container = st.container()
 
         st.subheader("📜 Trade History (click for delete)")
@@ -295,7 +290,6 @@ def main_page():
         
         wd_action_container = st.container()
 
->>>>>>> Stashed changes
         if withdrawals:
             st.dataframe(withdrawals, use_container_width=True)
         else:
