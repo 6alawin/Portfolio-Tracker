@@ -2,12 +2,28 @@ import streamlit as st
 import yfinance as yf
 from streamlit_autorefresh import st_autorefresh
 import datetime 
+import pandas as pd 
 import database as db
 from function import add_transactions, get_holdings, calculate_port, add_withdrawal, port_history
 
 st.set_page_config(page_title="My Portfolio", layout="wide")
 
 db.init_db()
+
+# --- Callback Functions ---
+def delete_tx_callback(t_id):
+    try:
+        db.delete_tx_db(t_id)
+        st.toast(f"✅ Delete Transaction {t_id} Success!")
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+def delete_wd_callback(w_id):
+    try:
+        db.delete_wd_db(w_id)
+        st.toast(f"✅ Delete Withdrawal {w_id} Success!")
+    except Exception as e:
+        st.error(f"Error: {e}")
 
 @st.cache_data(ttl=120)
 def fetch_current_prices(symbols):
@@ -30,12 +46,12 @@ if 'logged_in' not in st.session_state:
 if 'show_register' not in st.session_state:
     st.session_state.show_register = False
 
-# --- Pade Function ---
+# --- Page Functions ---
 
 def register_page():
     col7, col8, col9 = st.columns([1,1,1])
     with col8:
-        st.title('Register'.upper(), anchor=False, text_alignment="center")
+        st.title('Register'.upper(), anchor=False)
         new_user = st.text_input("New Username")
         new_pass = st.text_input("New Password", type='password')
         
@@ -223,7 +239,6 @@ def main_page():
     st.metric("Unrealized P&L", f"${total_unrelized:,.2f} / {roi_unrealized:,.2f}%", delta=f"{total_unrelized:,.2f}")
     st.caption("Price auto-updates every 2 minutes")
 
-    # --- Refresh ---
     if st.button("Refresh Price Now"):
         st.session_state.current_prices = current_prices
         st.rerun()
@@ -237,17 +252,12 @@ def main_page():
         st.subheader("📦 Current Holdings")
         st.dataframe(table, use_container_width=True)
 
-        st.subheader("📜 Trade History")
-        st.dataframe(transactions, use_container_width=True)
-
-    with col_side:
-        st.subheader("💸 Withdrawal Log")
         action_container = st.container()
 
         st.subheader("📜 Trade History (click for delete)")
         if transactions:
             df_tx = pd.DataFrame(transactions)
-            
+            df_tx = df_tx.sort_values(by='id', ascending=False)
             df_tx['No.'] = range(1, len(df_tx) + 1)
             
             cols = ['No.', 'id'] + [c for c in df_tx.columns if c not in ['No.', 'id']]
@@ -262,25 +272,15 @@ def main_page():
                 key="history_table_v2"
             )
 
-            df_tx['No.'] = range(1, len(df_tx) + 1)
-
             if len(event_tx.selection.rows) > 0:
                 idx = event_tx.selection.rows[0]
-                
                 tx_id_del = int(df_tx.iloc[idx]['id'])
-                
                 visual_no = df_tx.iloc[idx]['No.'] 
                 
                 with action_container:
-                    st.warning(f"⚠️ You want to delete Transactions NO. **{visual_no}** ?")
-                    
-                    st.button(
-                        "ยืนยันการลบ", 
-                        type="primary",
-                        key=f"btn_del_tx_{tx_id_del}",
-                        on_click=delete_tx_callback,
-                        args=(tx_id_del,)
-                    )
+                    st.warning(f"⚠️ Confirm Delete Transaction No. **{visual_no}** ?")
+                    st.button("ยืนยันการลบ", type="primary", key=f"btn_del_tx_{tx_id_del}",
+                              on_click=delete_tx_callback, args=(tx_id_del,))
         else:
             st.info("No trade history.")
 
@@ -291,7 +291,33 @@ def main_page():
         wd_action_container = st.container()
 
         if withdrawals:
-            st.dataframe(withdrawals, use_container_width=True)
+            df_wd = pd.DataFrame(withdrawals)
+            
+            df_wd = df_wd.sort_values(by='id', ascending=False)
+            
+            df_wd['No.'] = range(1, len(df_wd) + 1)
+            
+            cols_wd = ['No.', 'id'] + [c for c in df_wd.columns if c not in ['No.', 'id']]
+            df_wd = df_wd[cols_wd]
+
+            event_wd = st.dataframe(
+                df_wd,
+                use_container_width=True,
+                hide_index=True,
+                on_select="rerun",
+                selection_mode="single-row",
+                key="wd_table_v2"
+            )
+
+            if len(event_wd.selection.rows) > 0:
+                idx_wd = event_wd.selection.rows[0]
+                wd_id_del = int(df_wd.iloc[idx_wd]['id'])
+                wd_visual_no = df_wd.iloc[idx_wd]['No.']
+
+                with wd_action_container:
+                    st.warning(f"⚠️ Confirm Delete Withdrawal No. **{wd_visual_no}** ?")
+                    st.button("ยืนยันการลบ", type="primary", key=f"btn_del_wd_{wd_id_del}",
+                              on_click=delete_wd_callback, args=(wd_id_del,))
         else:
             st.info("No withdrawals yet.")
 
