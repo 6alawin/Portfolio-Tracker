@@ -127,7 +127,7 @@ def main_page():
                         st.sidebar.error("Not enough shares!")
                         st.stop()
 
-                db.add_tx_db(transactions, tx_type, symbol, qty, price, com, date=tx_date.strftime("%Y-%m-%d"))
+                db.add_tx_db(current_user_id, tx_type, symbol, qty, price, com, date=tx_date.strftime("%Y-%m-%d"))
                 st.success(f"Recorded {tx_type} {symbol} on {tx_date}")
                 st.rerun()
 
@@ -146,7 +146,7 @@ def main_page():
             elif amount <= 0:
                 st.sidebar.error("Amount must be > 0")
             else:
-                db.add_wd_db(withdrawals, amount, date=wd_date.strftime("%Y-%m-%d"))
+                db.add_wd_db(current_user_id, amount, date=wd_date.strftime("%Y-%m-%d"))
                 st.sidebar.success(f"Withdrew ${amount:,.2f} on {wd_date}")
                 st.rerun()
 
