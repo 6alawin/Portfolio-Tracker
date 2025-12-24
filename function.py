@@ -3,6 +3,13 @@ import pandas as pd
 import yfinance as yf
 import streamlit as st # เพิ่ม import นี้
 
+@st.cache_data(ttl=86400) 
+def fetch_sp500_data(start_date):
+    try:
+        return yf.download("^GSPC", start=start_date, progress=False)['Close']
+    except:
+        return pd.Series(dtype='float64')
+
 def add_transactions(transactions, tx_type, symbol, qty, price, com, date=None):
     record_date = date if date else datetime.datetime.now().strftime("%Y-%m-%d")
     transactions.append({
