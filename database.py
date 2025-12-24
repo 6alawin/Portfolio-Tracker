@@ -62,10 +62,20 @@ def get_tx_db(user_id):
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('SELECT type, symbol, qty, price, com, date FROM transactions WHERE user_id = ?', (user_id,))
+    
+    # 👇 ต้องเติม id, ไว้ข้างหน้าสุดแบบนี้
+    c.execute('SELECT id, type, symbol, qty, price, com, date FROM transactions WHERE user_id = ?', (user_id,))
+    
     data = c.fetchall()
     conn.close()
     return [dict(row) for row in data]
+
+def delete_tx_db(tx_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('DELETE FROM transactions WHERE id = ?', (tx_id,))
+    conn.commit()
+    conn.close()
 
 def add_wd_db(user_id, amount, date):
     conn = sqlite3.connect(DB_NAME)
@@ -78,12 +88,23 @@ def get_wd_db(user_id):
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('SELECT amount, date FROM withdrawals WHERE user_id = ?', (user_id,))
+    
+    # 👇 เติม id, ตรงนี้ด้วย
+    c.execute('SELECT id, amount, date FROM withdrawals WHERE user_id = ?', (user_id,))
+    
     data = c.fetchall()
     conn.close()
+    
     result = []
     for row in data:
         r = dict(row)
         r['type'] = 'WITHDRAW'
         result.append(r)
     return result
+
+def delete_wd_db(wd_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('DELETE FROM withdrawals WHERE id = ?', (wd_id,))
+    conn.commit()
+    conn.close()

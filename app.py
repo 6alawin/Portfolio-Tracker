@@ -97,6 +97,11 @@ def main_page():
     transactions = db.get_tx_db(current_user_id)
     withdrawals = db.get_wd_db(current_user_id)
 
+    def delete_callback(tx_id):
+        import database as db
+        db.delete_tx_db(tx_id)
+        st.toast(f"✅ ลบรายการ {tx_id} แล้ว! (กำลังรีเฟรช...)")
+
     # --- Sidebar ---
     st.sidebar.title(f'User {st.session_state.username}')
     if st.sidebar.button('Logout'):
@@ -231,23 +236,102 @@ def main_page():
         st.session_state.current_prices = current_prices
         st.rerun()
 
-    st.divider()
+    import pandas as pd 
 
+    st.divider() # ขีดเส้นคั่นหน่อย
+    
     col_main, col_side = st.columns([2, 1])
 
     with col_main:
         st.subheader("📦 Current Holdings")
         st.dataframe(table, use_container_width=True)
 
+        st.divider() # เส้นคั่น
+
+        # 1. สร้างพื้นที่ว่างๆ รอไว้ "ข้างบน" ตาราง (เอาไว้โชว์ปุ่มลบ)
+        action_container = st.container()
+
         st.subheader("📜 Trade History")
-        st.dataframe(transactions, use_container_width=True)
+        
+        if transactions:
+            df_tx = pd.DataFrame(transactions)
+            
+            # จัดเรียง ID ไว้หน้าสุด
+            cols = ['id'] + [c for c in df_tx.columns if c != 'id']
+            df_tx = df_tx[cols]
+
+            # 2. แสดงตาราง (เมื่อคลิกเลือก มันจะไป trig ให้โค้ดทำงานต่อ)
+            event_tx = st.dataframe(
+                df_tx,
+                use_container_width=True,
+                hide_index=True,
+                on_select="rerun",           # คลิกปุ๊บ รีรันโค้ดรอบนึงเพื่อโชว์ปุ่ม
+                selection_mode="single-row",
+                key="history_table"
+            )
+            
+            # 3. เช็คว่ามีการเลือกบรรทัดไหม
+            if len(event_tx.selection.rows) > 0:
+                selected_idx = event_tx.selection.rows[0]
+                tx_id_delete = df_tx.iloc[selected_idx]['id']
+                
+                # 4. ย้อนกลับไปใส่ปุ่มใน "พื้นที่ว่างข้างบน" ที่เราจองไว้ (action_container)
+                with action_container:
+                    # สร้างกรอบสีแดงเตือน
+                    with st.chat_message("assistant", avatar="🗑️"):
+                        st.write(f"⚠️ **ต้องการลบรายการ ID: {tx_id_delete} ใช่ไหม?**")
+                        
+                        # ปุ่มยืนยันลบ
+                        if st.button("ยืนยันการลบ (Confirm Delete)", type="primary"):
+                            db.delete_tx_db(tx_id_delete) # ลบใน Database
+                            st.toast(f"❌ ลบรายการ {tx_id_delete} เรียบร้อย!")
+                            
+                            # สำคัญมาก! ต้องสั่ง sleep นิดนึงแล้ว rerun ไม่งั้นมันจะเร็วไปจน database ตามไม่ทัน
+                            import time
+                            time.sleep(0.5) 
+                            st.rerun() # รีโหลดหน้าจอทันที
+        else:
+            st.info("No trade history.")
 
     with col_side:
+        # ทำเหมือนกันกับฝั่ง Withdraw (ถ้าต้องการ)
         st.subheader("💸 Withdrawal Log")
+        # ... (โค้ดส่วน Withdraw ถ้าจะแก้ก็ใช้ logic เดียวกันครับ) ...
         if withdrawals:
-            st.dataframe(withdrawals, use_container_width=True)
+            df_wd = pd.DataFrame(withdrawals)
+            cols_wd = ['id'] + [c for c in df_wd.columns if c != 'id']
+            df_wd = df_wd[cols_wd]
+            
+            # สร้างพื้นที่จองสำหรับปุ่มลบถอนเงิน
+            wd_action_container = st.container()
+
+            event_wd = st.dataframe(
+                df_wd,
+                use_container_width=True,
+                hide_index=True,
+                on_select="rerun",
+                selection_mode="single-row",
+                key="wd_table"
+            )
+
+            if len(event_wd.selection.rows) > 0:
+                wd_idx = event_wd.selection.rows[0]
+                wd_id_delete = df_wd.iloc[wd_idx]['id']
+                
+                with action_container:
+                    # สร้างกรอบสีแดง
+                    with st.chat_message("assistant", avatar="🗑️"):
+                        st.write(f"⚠️ **ต้องการลบรายการ ID: {tx_id_delete} ใช่ไหม?**")
+                        
+                        # 👇 แก้ตรงนี้! ใช้ on_click แทน
+                        st.button(
+                            "ยืนยันการลบ (Confirm Delete)", 
+                            type="primary",
+                            on_click=delete_callback,  # เรียกฟังก์ชันลบ
+                            args=(tx_id_delete,)       # ส่ง ID ไปให้ฟังก์ชัน
+                        )
         else:
-            st.info("No withdrawals yet.")
+            st.info("No withdrawals.")
 
 if st.session_state.logged_in:
     main_page()
