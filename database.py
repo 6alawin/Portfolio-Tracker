@@ -60,25 +60,16 @@ def get_tx_db(user_id):
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-<<<<<<< Updated upstream
-    c.execute('SELECT type, symbol, qty, price, com, date FROM transactions WHERE user_id = ?', (user_id,))
-=======
-    
     c.execute('SELECT id, type, symbol, qty, price, com, date FROM transactions WHERE user_id = ?', (user_id,))
-    
->>>>>>> Stashed changes
     data = c.fetchall()
     conn.close()
     return [dict(row) for row in data]
 
-<<<<<<< Updated upstream
-=======
 def delete_tx_db(tx_id):
     conn = sqlite3.connect(DB_NAME)
     try:
         c = conn.cursor()
         safe_id = int(tx_id)
-        
         c.execute('DELETE FROM transactions WHERE id = ?', (safe_id,))
         conn.commit()
         print(f"DEBUG: Delete TX ID {safe_id} success. Rows affected: {c.rowcount}")
@@ -87,7 +78,6 @@ def delete_tx_db(tx_id):
     finally:
         conn.close()
 
->>>>>>> Stashed changes
 def add_wd_db(user_id, amount, date):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -99,13 +89,8 @@ def get_wd_db(user_id):
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-<<<<<<< Updated upstream
-    c.execute('SELECT amount, date FROM withdrawals WHERE user_id = ?', (user_id,))
-=======
-    
     c.execute('SELECT id, amount, date FROM withdrawals WHERE user_id = ?', (user_id,))
     
->>>>>>> Stashed changes
     data = c.fetchall()
     conn.close()
     result = []
@@ -113,9 +98,6 @@ def get_wd_db(user_id):
         r = dict(row)
         r['type'] = 'WITHDRAW'
         result.append(r)
-<<<<<<< Updated upstream
-    return result
-=======
     return result
 
 def delete_wd_db(wd_id):
@@ -131,4 +113,4 @@ def delete_wd_db(wd_id):
         print(f"ERROR deleting WD: {e}")
     finally:
         conn.close()
->>>>>>> Stashed changes
+
