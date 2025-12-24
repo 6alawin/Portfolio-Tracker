@@ -89,7 +89,7 @@ def login_page():
                 st.rerun()
 
 def main_page():
-    st_autorefresh(interval=120000, key="price_refresher") # Auto refresh ทุก 2 นาที
+    st_autorefresh(interval=120000, key="price_refresher")
     st.title("My Portfolio")
 
     current_user_id = st.session_state.user_id
@@ -170,16 +170,13 @@ def main_page():
         roi_unrealized = 0.0
         roi_relized = 0.0
 
-    # ดึงราคาหุ้น
     active_symbols = list(holdings.keys())
     current_prices = fetch_current_prices(active_symbols)
 
     if active_symbols:
-        # เช็คว่ามีราคาเดิมอยู่ไหม ถ้าไม่มีค่อยดึงใหม่ หรือถ้ากดปุ่ม Refresh
         if not st.session_state.current_prices: 
             st.session_state.current_prices = current_prices
 
-    # สร้างตาราง Holdings
     for symbol, data in holdings.items():
         qty = data["qty"]
         cost_basis_per_share = data["avg_cost"]
@@ -226,7 +223,7 @@ def main_page():
     st.metric("Unrealized P&L", f"${total_unrelized:,.2f} / {roi_unrealized:,.2f}%", delta=f"{total_unrelized:,.2f}")
     st.caption("Price auto-updates every 2 minutes")
 
-    # --- ปุ่ม Refresh ที่แก้ไขแล้ว (แก้จุด Rerun รัวๆ) ---
+    # --- Refresh ---
     if st.button("Refresh Price Now"):
         st.session_state.current_prices = current_prices
         st.rerun()
@@ -235,15 +232,70 @@ def main_page():
 
     col_main, col_side = st.columns([2, 1])
 
+<<<<<<< Updated upstream
+=======
+    # --- History ---
+>>>>>>> Stashed changes
     with col_main:
         st.subheader("📦 Current Holdings")
         st.dataframe(table, use_container_width=True)
 
+<<<<<<< Updated upstream
         st.subheader("📜 Trade History")
         st.dataframe(transactions, use_container_width=True)
 
     with col_side:
         st.subheader("💸 Withdrawal Log")
+=======
+        action_container = st.container()
+
+        st.subheader("📜 Trade History (click for delete)")
+        if transactions:
+            df_tx = pd.DataFrame(transactions)
+            
+            df_tx['No.'] = range(1, len(df_tx) + 1)
+            
+            cols = ['No.', 'id'] + [c for c in df_tx.columns if c not in ['No.', 'id']]
+            df_tx = df_tx[cols]
+
+            event_tx = st.dataframe(
+                df_tx,
+                use_container_width=True,
+                hide_index=True, 
+                on_select="rerun",
+                selection_mode="single-row",
+                key="history_table_v2"
+            )
+
+            df_tx['No.'] = range(1, len(df_tx) + 1)
+
+            if len(event_tx.selection.rows) > 0:
+                idx = event_tx.selection.rows[0]
+                
+                tx_id_del = int(df_tx.iloc[idx]['id'])
+                
+                visual_no = df_tx.iloc[idx]['No.'] 
+                
+                with action_container:
+                    st.warning(f"⚠️ You want to delete Transactions NO. **{visual_no}** ?")
+                    
+                    st.button(
+                        "ยืนยันการลบ", 
+                        type="primary",
+                        key=f"btn_del_tx_{tx_id_del}",
+                        on_click=delete_tx_callback,
+                        args=(tx_id_del,)
+                    )
+        else:
+            st.info("No trade history.")
+
+    # --- Withdrawal ---
+    with col_side:
+        st.subheader("💸 Withdrawal Log")
+        
+        wd_action_container = st.container()
+
+>>>>>>> Stashed changes
         if withdrawals:
             st.dataframe(withdrawals, use_container_width=True)
         else:

@@ -67,7 +67,6 @@ def calculate_port(transactions):
     temp_holdings = {}
 
     for tx in transactions:
-        # แก้ไขคำผิด (tpye -> type)
         t_type = tx.get("type") 
         symbol = tx.get("symbol")
         qty = tx.get("qty", 0.0)
@@ -77,7 +76,6 @@ def calculate_port(transactions):
         if t_type == "BUY":
             cost = (qty * price) + com
             
-            # *** ลบบรรทัด add_transactions ที่ซ้ำซ้อนออกแล้ว ***
             
             if symbol not in temp_holdings:
                 temp_holdings[symbol] = {"qty": 0.0, "total_cost": 0.0}
@@ -105,7 +103,6 @@ def calculate_port(transactions):
 
     return total_sell_revenue, total_invested, realized_pnl
 
-# --- S&P 500 Cache (24 ชั่วโมง) ---
 @st.cache_data(ttl=3000) 
 def fetch_sp500_data(start_date):
     try:
@@ -130,7 +127,6 @@ def port_history(transactions):
     symbols = list(set(t['symbol'] for t in transactions if t.get('symbol')))
     symbols = [s for s in symbols if s] 
     
-    # ดึง S&P 500 จาก Cache
     sp500_data = fetch_sp500_data(start_date)
 
     try:
