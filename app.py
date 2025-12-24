@@ -163,8 +163,12 @@ def main_page():
     table = []
     total_unrelized = 0.0
     portfolio_value = 0.0
-    roi_relized = (realized_pnl / total_invested) * 100
-    roi_unrealized = (total_unrelized / total_invested) * 100
+    if total_invested > 0:
+        roi_unrealized = (total_unrelized / total_invested) * 100
+        roi_relized = (realized_pnl / total_invested) * 100
+    else:
+        roi_unrealized = 0.0
+        roi_relized = 0.0
 
     # ดึงราคาหุ้น
     active_symbols = list(holdings.keys())
