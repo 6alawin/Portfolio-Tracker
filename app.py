@@ -163,6 +163,8 @@ def main_page():
     table = []
     total_unrelized = 0.0
     portfolio_value = 0.0
+    roi_relized = (realized_pnl / total_invested) * 100
+    roi_unrealized = (total_unrelized / total_invested) * 100
 
     # ดึงราคาหุ้น
     active_symbols = list(holdings.keys())
@@ -203,7 +205,7 @@ def main_page():
     col1.metric("Total Invested", f"${total_invested:,.2f}")
     col2.metric("Portfolio Value", f"${portfolio_value:,.2f}")
     col3.metric("Cash Cow (Available)", f"${cash_cow:,.2f}")
-    col4.metric("Realized P&L", f"${realized_pnl:,.2f} / {(realized_pnl / total_invested) * 100:,.2f}%")
+    col4.metric("Realized P&L", f"${realized_pnl:,.2f} / {roi_relized:,.2f}%")
 
     # Chart Section
     if transactions:
@@ -217,7 +219,7 @@ def main_page():
             st.info("Chart needs more data.")
 
     st.subheader("Current Holdings")
-    st.metric("Unrealized P&L", f"${total_unrelized:,.2f} / {(total_unrelized / total_invested) * 100:,.2f}%", delta=f"{total_unrelized:,.2f}")
+    st.metric("Unrealized P&L", f"${total_unrelized:,.2f} / {roi_unrealized:,.2f}%", delta=f"{total_unrelized:,.2f}")
     st.caption("Price auto-updates every 2 minutes")
 
     # --- ปุ่ม Refresh ที่แก้ไขแล้ว (แก้จุด Rerun รัวๆ) ---
