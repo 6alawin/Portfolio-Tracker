@@ -72,10 +72,18 @@ def get_tx_db(user_id):
 
 def delete_tx_db(tx_id):
     conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute('DELETE FROM transactions WHERE id = ?', (tx_id,))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        # แปลงเป็น int ธรรมดาของ Python (สำคัญมาก! แก้บั๊ก numpy)
+        safe_id = int(tx_id)
+        
+        c.execute('DELETE FROM transactions WHERE id = ?', (safe_id,))
+        conn.commit() # ยืนยันการลบ
+        print(f"DEBUG: Delete TX ID {safe_id} success. Rows affected: {c.rowcount}")
+    except Exception as e:
+        print(f"ERROR deleting TX: {e}")
+    finally:
+        conn.close()
 
 def add_wd_db(user_id, amount, date):
     conn = sqlite3.connect(DB_NAME)
@@ -104,7 +112,15 @@ def get_wd_db(user_id):
 
 def delete_wd_db(wd_id):
     conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute('DELETE FROM withdrawals WHERE id = ?', (wd_id,))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        # แปลงเป็น int ธรรมดา
+        safe_id = int(wd_id)
+        
+        c.execute('DELETE FROM withdrawals WHERE id = ?', (safe_id,))
+        conn.commit()
+        print(f"DEBUG: Delete WD ID {safe_id} success. Rows affected: {c.rowcount}")
+    except Exception as e:
+        print(f"ERROR deleting WD: {e}")
+    finally:
+        conn.close()
